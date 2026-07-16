@@ -31,7 +31,7 @@
   @media(prefers-color-scheme:dark){:root{--tier2:#5b93cc;--tier3:#78aadd;--tier4:#9cc3e8;--tier5:#aebccb;--tier6:#e2a891;--tier7:#db7856;--tier8:#c25538;}}
   :root[data-theme="light"]{--tier2:#1f5c99;--tier3:#4a86bd;--tier4:#86b4d8;--tier5:#b9c9d4;--tier6:#dd9b84;--tier7:#c8603f;--tier8:#9c3a22;}
   :root[data-theme="dark"]{--tier2:#5b93cc;--tier3:#78aadd;--tier4:#9cc3e8;--tier5:#aebccb;--tier6:#e2a891;--tier7:#db7856;--tier8:#c25538;}
-  *{box-sizing:border-box} html{overflow-x:hidden;} body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box} html{overflow-x:clip;} body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;}
   .num{font-variant-numeric:tabular-nums lining-nums;}
   /* shell */
   .shell{display:flex;min-height:100vh;}
@@ -372,6 +372,11 @@ thead th{z-index:2;}
       </section>
       <section>
         <div class="sec-head"><h2>Profile against the field</h2><p>Everyone you've faced in the selected scope, by handicap: what each matchup is worth in Shark points, how much you play them, and how you do vs a league-average player.</p></div>
+        <div class="controls">
+          <div class="ctrl"><label for="plLeague2">League</label><select id="plLeague2"><option value="all">All 8-ball leagues</option><option value="wed">Wednesday 8-ball</option></select></div>
+          <div class="ctrl"><label for="plSeason2">Season</label><select id="plSeason2"></select></div>
+          <div class="scopetag" id="plScope2"></div>
+        </div>
         <div class="card">
           <div class="panel-title first">Shark points — where your value is earned and lost</div><div class="chart-wrap"><svg id="pShark" viewBox="0 0 760 210" role="img"></svg></div>
           <div class="panel-title">Racks played — who you actually face</div><div class="chart-wrap"><svg id="pRacks" viewBox="0 0 760 190" role="img"></svg></div>
@@ -583,19 +588,24 @@ function pRaw(){if(pSeason!=='All')return P.seasons[pSeason]||[];return pLeague=
 function loadPlayer(name){
   P=PLAYERS[name];pLeague='all';pSeason='All';
   document.getElementById('plName').textContent=name;
-  const ls=document.getElementById('plLeague'),ss=document.getElementById('plSeason');
-  ls.value='all';ss.innerHTML='<option value="All">All-time</option>'+P.seasonOrder.map(s=>`<option value="${s}">${s}</option>`).join('');ss.value='All';
-  ls.onchange=e=>{pLeague=e.target.value;pRender();};ss.onchange=e=>{pSeason=e.target.value;pRender();};
+  const ls=document.getElementById('plLeague'),ss=document.getElementById('plSeason'),ls2=document.getElementById('plLeague2'),ss2=document.getElementById('plSeason2');
+  ls.value='all';ls2.value='all';
+  const _opts='<option value="All">All-time</option>'+P.seasonOrder.map(s=>`<option value="${s}">${s}</option>`).join('');
+  ss.innerHTML=_opts;ss2.innerHTML=_opts;ss.value='All';ss2.value='All';
+  const setLeague=v=>{pLeague=v;ls.value=v;ls2.value=v;pRender();};
+  const setSeason=v=>{pSeason=v;ss.value=v;ss2.value=v;pRender();};
+  ls.onchange=e=>setLeague(e.target.value);ls2.onchange=e=>setLeague(e.target.value);
+  ss.onchange=e=>setSeason(e.target.value);ss2.onchange=e=>setSeason(e.target.value);
   pRender();
   document.getElementById('plNarr').innerHTML=P.narr;
   document.getElementById('plFoot').innerHTML='Source: leagues.societybilliards.com — app/stats record-vs-handicap, pulled Jul 11 2026. Switch between your Wednesday 8-ball career, all your 8-ball leagues, or a single Wednesday season. Shark points value each win by the opponent handicap’s leaguewide win rate and each loss by one minus it. Power rank is the Wednesday leaderboard (last six seasons) and does not change with scope. Every chart, including Form over time, follows the League toggle; the written read describes your Wednesday 8-ball career.';
 }
 function pRender(){
-  document.getElementById('plLeague').disabled=(pSeason!=='All');
+  document.getElementById('plLeague').disabled=(pSeason!=='All');{const _l2=document.getElementById('plLeague2');if(_l2)_l2.disabled=(pSeason!=='All');}
   const D=pCompute(pRaw()),{rows,W,L,F,shark}=D;
   const fav=Math.max(...rows.filter(r=>r[3]>=3&&r[4]>=0.5).map(r=>r[0]),-Infinity);
   document.getElementById('plSub').textContent=`Chalkoholics · Handicap ${P.hc} · #${P.rank} of ${P.nall} · ${pScopeLabel()}`;
-  document.getElementById('plScope').innerHTML=`<b>${pScopeLabel()}</b> — ${F.toLocaleString()} racks`+(pSeason!=='All'?' · league fixed to Wednesday':'');
+  document.getElementById('plScope').innerHTML=`<b>${pScopeLabel()}</b> — ${F.toLocaleString()} racks`+(pSeason!=='All'?' · league fixed to Wednesday':'');{const _s2=document.getElementById('plScope2');if(_s2)_s2.innerHTML=document.getElementById('plScope').innerHTML;}
   const _ax=rows.reduce((o,r)=>{if(r[0]>=5){o[0]+=r[1];o[1]+=r[2];}return o;},[0,0]),_axT=_ax[0]+_ax[1],apxV=_axT?_ax[0]/_axT:null;
   const tiles=[['Win%',F?(W/F*100).toFixed(1)+'%':'—',`${W}–${L}`,0],['5+%',apxV!=null?(apxV*100).toFixed(0)+'%':'—',`vs HC 5+ · ${_ax[0]}\u2013${_ax[1]}`,0],['Racks',F.toLocaleString(),pSeason==='All'?`${P.seasonOrder.length} Wed seasons`:'this season',0],['Shark points',sg(shark,1),'wins above par',0],['Shark /100',F?sg(shark/F*100,1):'—','per 100 racks',0],['Favored through',isFinite(fav)?'HC '+fav:'—','winning record',0],['Last50 rank','#'+P.rank,'of '+P.nall+' · Wed',1]];
   document.getElementById('plKpis').innerHTML=tiles.map(t=>`<div class="kpi${t[3]?' fixed':''}"><div class="k num">${t[1]}</div><div class="l"><b>${t[0]}</b><br>${t[2]}</div></div>`).join('');
