@@ -209,17 +209,7 @@ thead th{z-index:2;}
           <thead><tr><th data-k="rk">#</th><th data-k="0" data-t="s">Player</th><th data-k="team" data-t="s">Team</th><th data-k="1" data-t="n">HC</th><th data-k="8" data-t="n">Racks</th><th data-k="6" data-t="n">W</th><th data-k="7" data-t="n">L</th><th data-k="winpct" data-t="n">Win%</th><th data-k="apex" data-t="n" title="Record vs HC 5+ (the league's top half)">5+</th><th data-k="apex" data-t="n" title="Win % vs HC 5+">5+%</th><th data-k="3" data-t="n">Last25</th><th data-k="2" data-t="n" class="sorted">Last50</th><th data-k="5" data-t="n">Shark pts</th><th data-k="4" data-t="n">Shark /100</th></tr></thead><tbody></tbody>
         </table></div></div>
       </section>
-      <section>
-        <div class="sec-head"><h2>Historical Anchors</h2><p>League-wide reference points from the full history &mdash; the backdrop the metrics above are calibrated against. Wednesday 8-ball, all seasons.</p></div>
-        <div class="card"><div class="panel-title first">Handicap vs. career record &mdash; Current handicap against lifetime win% — Chalkoholics in clay.</div><div class="chart-wrap"><svg id="career" viewBox="0 0 760 470" role="img"></svg></div>
-          <div class="legend"><span><span class="sw rnd" style="background:var(--felt)"></span>League</span><span><span class="sw rnd" style="background:var(--team)"></span>Chalkoholics</span><span><span class="sw line"></span>Trend (r = 0.90)</span><span><span class="sw dash"></span>50%</span></div>
-          <div class="callout">The tightest relationship in the data (<b>r = 0.90</b>, +9 pts/HC). Gene is the team's clearest over-performer for a 6.</div></div>
-        <div class="card" style="margin-top:18px"><div class="panel-title first">The handicap ladder &mdash; All qualified players pooled by handicap.</div><div class="chart-wrap"><svg id="ladder" viewBox="0 0 760 400" role="img"></svg></div>
-          <div class="callout">Each rung beats the one below by ~9–10 points. This ladder is also what the <b>Shark Rating</b> uses to value a win over each handicap.</div></div>
-        <div class="card" style="margin-top:18px"><div class="panel-title first">How handicaps are distributed &mdash; All 545 players by handicap, mean and ±1 SD.</div><div class="chart-wrap"><svg id="hcdist" viewBox="0 0 760 360" role="img"></svg></div>
-          <div class="callout">The league averages a <b>4.3 handicap (SD 1.7)</b>. The Chalkoholics sit almost entirely in the upper-middle — a strong side on paper.</div></div>
-      </section>
-      <p class="foot">Source: leagues.societybilliards.com, pulled Jul 11 2026 — Wednesday 8-ball only. Interactive board covers the last six seasons; "All" limited to 50+ racks; single seasons include everyone who played, or filter to Qualified regulars. Power: recency-weighted (50-rack half-life) shrunk win rate. Shark: per-rack win value by opponent handicap. Scatter/ladder/distribution reflect full 14-season history.</p>
+      <p class="foot">Source: leagues.societybilliards.com, pulled Jul 11 2026 — Wednesday 8-ball only. Interactive board covers the last six seasons; "All" limited to 50+ racks; single seasons include everyone who played, or filter to Qualified regulars. Power: recency-weighted (50-rack half-life) shrunk win rate. Shark: per-rack win value by opponent handicap. The handicap ladder, career scatter, and distribution now live in the <b>Metrics Guide</b>.</p>
     </div></div>
 
     <!-- TEAM VIEW -->
@@ -263,6 +253,11 @@ thead th{z-index:2;}
           <div class="tscroll"><table><thead><tr><th>Handicap</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead>
           <tbody><tr><td>Difficulty (leaguewide win rate)</td><td>.10</td><td>.24</td><td>.35</td><td>.45</td><td>.56</td><td>.62</td><td>.71</td><td>.79</td><td>.86</td><td>.92</td></tr></tbody></table></div>
         </div>
+        <div class="card" style="margin-top:18px"><div class="panel-title first">The handicap ladder &mdash; all qualified players pooled by handicap.</div><div class="chart-wrap"><svg id="ladder" viewBox="0 0 760 400" role="img"></svg></div>
+          <div class="callout">The difficulty table above, drawn out: each rung beats the one below by ~9–10 points. This ladder is exactly what the <b>Shark</b> metrics use to value a win over each handicap.</div></div>
+        <div class="card" style="margin-top:18px"><div class="panel-title first">Handicap vs. career record &mdash; current handicap against lifetime win %, Chalkoholics in clay.</div><div class="chart-wrap"><svg id="career" viewBox="0 0 760 470" role="img"></svg></div>
+          <div class="legend"><span><span class="sw rnd" style="background:var(--felt)"></span>League</span><span><span class="sw rnd" style="background:var(--team)"></span>Chalkoholics</span><span><span class="sw line"></span>Trend (r = 0.90)</span><span><span class="sw dash"></span>50%</span></div>
+          <div class="callout">Proof the ladder is real: across every qualified player, handicap tracks lifetime win % tightly (<b>r = 0.90</b>, +9 pts/HC). Gene is the team's clearest over-performer for a 6.</div></div>
       </section>
 
       <section>
@@ -323,6 +318,8 @@ thead th{z-index:2;}
           </tbody></table></div>
           <div class="callout" style="margin-top:16px">Both carry a positive Shark, but they earn it differently. <b>Gene</b> genuinely beats the top half more than half the time (<b>57%</b>). <b>Brett's</b> Shark is buoyed by rarely getting upset by weaker players &mdash; against the strong half he wins just <b>36%</b>. Come playoff time, when the weak half disappears, that gap is the whole story.</div>
         </div>
+        <div class="card" style="margin-top:18px"><div class="panel-title first">Where the top half sits &mdash; all 545 players by handicap, mean and ±1 SD.</div><div class="chart-wrap"><svg id="hcdist" viewBox="0 0 760 360" role="img"></svg></div>
+          <div class="callout">The league averages a <b>4.3 handicap (SD 1.7)</b>. Everything from <b>HC 5 up</b> is the group 5+ measures you against &mdash; the top half of this distribution, where about half of all racks are played and the caliber you meet in the playoffs.</div></div>
       </section>
 
       <section>
@@ -343,7 +340,7 @@ thead th{z-index:2;}
           <tr><td style="text-align:left">Just the raw record?</td><td style="text-align:left"><b>W / L / Win%</b> (any table)</td></tr>
         </tbody></table></div></div>
       </section>
-      <p class="foot">Difficulty values are each handicap's pooled leaguewide win rate across 14 Wednesday seasons. Power uses a 50-rack half-life and 12 pseudo-racks of shrinkage over the last six seasons. All examples use real player data pulled Jul 11 2026.</p>
+      <p class="foot">Difficulty values are each handicap's pooled leaguewide win rate across 14 Wednesday seasons. The handicap ladder, career scatter, and handicap distribution reflect the full 14-season history. Power uses a 50-rack half-life and 12 pseudo-racks of shrinkage over the last six seasons. All examples use real player data pulled Jul 11 2026.</p>
     </div></div>
 
     <!-- PLAYER VIEW -->
