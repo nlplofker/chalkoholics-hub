@@ -140,6 +140,10 @@ td.tm{color:var(--muted);font-size:12px;white-space:nowrap;}
 @media (prefers-color-scheme:dark){.apexcell{color:#d8a54e;}}
 :root[data-theme="dark"] .apexcell{color:#d8a54e;}
 :root[data-theme="light"] .apexcell{color:#a86a1f;}
+/* Shark vs HC: plays-like chip — tier hue as a tint behind ink text, since the raw tier
+   palette is tuned for chart fills and several steps are too light to read as type. */
+.plpill{display:inline-block;min-width:24px;padding:2px 7px;border-radius:6px;text-align:center;font-weight:700;color:var(--ink);}
+.thin{color:var(--muted);font-weight:700;margin-left:2px;cursor:help;}
 .radios{display:flex;gap:12px;align-items:center;}
 .radios .rd{display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:500;font-size:13px;color:var(--ink);}
 .radios input{accent-color:var(--felt);cursor:pointer;margin:0;}
@@ -366,6 +370,90 @@ thead th{z-index:2;}
       <p class="foot">Difficulty values are each handicap's pooled leaguewide win rate across 14 Wednesday seasons. The handicap ladder, career scatter, and handicap distribution reflect the full 14-season history. Power uses a 50-rack half-life and 12 pseudo-racks of shrinkage over the last six seasons. All examples use real player data pulled Jul 11 2026.</p>
     </div></div>
 
+    <!-- SHARK VS HC VIEW -->
+    <div class="view" id="view-shark" hidden><div class="wrap">
+      <header>
+        <div class="eyebrow">Society Billiards · Shark vs HC · 8-Ball</div>
+        <h1>Who's playing above their grade?</h1>
+        <p class="dek">Every player carries an assigned handicap. Shark says what their results actually look like. This page puts the two side by side: the handicap the league gave you, the handicap your Shark pace says you're playing at, and the gap between them. <b style="color:var(--over)">Over</b> means you're beating what your grade predicts; <b style="color:var(--under)">under</b> means you're not.</p>
+        <p class="sub" id="acProtoNote"></p>
+      </header>
+      <div class="controls" style="margin-top:26px">
+        <div class="ctrl"><label for="acScope">Racks counted</label><select id="acScope"></select></div>
+        <div class="scopetag">Par and every column on this page recompute inside the chosen window.</div>
+      </div>
+      <section style="margin-top:24px">
+        <div class="method">
+          <h3>Two ways to read the gap</h3>
+          <ul class="breath">
+            <li><b>Band gap</b> = how far outside your handicap's Shark /100 band you sit, in points. <b>0.0 means you're inside your band</b> &mdash; playing exactly like your grade, which is where most of the league sits. Clearing the edge means your results land in the neighbouring grade, so this is the truest read on a mis-set handicap. <b>It ranks the two boards above</b>, where the players sitting at 0.0 never reach either end.</li>
+            <li><b>vs Par</b> = your Shark /100 minus the <em>median</em> Shark /100 of everyone at your handicap, measured over the same window. Continuous, so every player gets a distinct number even inside the band. <b>It sorts the All players table</b> and breaks ties on the boards above.</li>
+            <li><b>Plays like</b> is the handicap whose leaguewide Shark pace your number matches. Since the bands are set at the midpoints between neighbouring handicaps, this lands within &plusmn;1 of your real handicap for nearly everyone.</li>
+            <li><b>Last 25 / 50</b> run continuously backwards from the most recent season and cross into earlier ones when a player hasn't hit that many racks yet &mdash; the <b>Span</b> column shows exactly which seasons each window drew on.</li>
+          </ul>
+        </div>
+      </section>
+      <section>
+        <div class="sec-head"><h2>Top 10 overachievers</h2><p>Furthest <b style="color:var(--over)">past the top edge</b> of their handicap's Shark band &mdash; the players whose results sit deepest into the grade above.</p></div>
+        <div class="card tablecard"><div class="tscroll"><table id="acOverTbl" class="freeze2">
+          <thead><tr>
+            <th>#</th>
+            <th style="text-align:left">Player</th>
+            <th>Team</th>
+            <th>HC</th>
+            <th>Plays like</th>
+            <th>Racks</th>
+            <th>W</th>
+            <th>L</th>
+            <th>Win%</th>
+            <th>Shark /100</th>
+            <th class="sorted">Band gap</th>
+          </tr></thead><tbody></tbody>
+        </table></div></div>
+      </section>
+      <section>
+        <div class="sec-head"><h2>Top 10 underachievers</h2><p>Furthest <b style="color:var(--under)">below the bottom edge</b> of their handicap's band, most negative first. Usually a grade set from form since lost.</p></div>
+        <div class="card tablecard"><div class="tscroll"><table id="acUnderTbl" class="freeze2">
+          <thead><tr>
+            <th>#</th>
+            <th style="text-align:left">Player</th>
+            <th>Team</th>
+            <th>HC</th>
+            <th>Plays like</th>
+            <th>Racks</th>
+            <th>W</th>
+            <th>L</th>
+            <th>Win%</th>
+            <th>Shark /100</th>
+            <th class="sorted">Band gap</th>
+          </tr></thead><tbody></tbody>
+        </table></div></div>
+      </section>
+      <section>
+        <div class="sec-head"><h2>All players</h2><p>The full board, sorted by vs Par. Click any column header to re-sort.</p></div>
+        <div class="card tablecard"><div class="tscroll"><table id="acTbl" class="freeze2">
+          <thead><tr>
+            <th data-k="rk">#</th>
+            <th data-k="name" data-t="s">Player</th>
+            <th data-k="team" data-t="s">Team</th>
+            <th data-k="hc" data-t="n">HC<span class="ic" title="Handicap — the grade the league currently carries for this player.">i</span></th>
+            <th data-k="pl" data-t="n">Plays like<span class="ic" title="The handicap whose leaguewide Shark pace this player's number matches.">i</span></th>
+            <th data-k="d" data-t="n">&Delta; HC<span class="ic" title="Plays-like handicap minus assigned handicap. +1 = playing a full grade above their rating.">i</span></th>
+            <th data-k="F" data-t="n">Racks</th>
+            <th data-k="span" data-t="s">Span<span class="ic" title="Which seasons the counted racks came from. A window reaching back through more than one season is stitched together continuously.">i</span></th>
+            <th data-k="W" data-t="n">W</th>
+            <th data-k="L" data-t="n">L</th>
+            <th data-k="pct" data-t="n">Win%</th>
+            <th data-k="shark" data-t="n">Shark<span class="ic" title="Quality-of-competition points: each win is worth the opponent's difficulty, each loss costs one minus it, summed over every rack.">i</span></th>
+            <th data-k="rate" data-t="n">Shark /100<span class="ic" title="Shark per 100 racks — volume-neutral, so players with very different rack counts compare fairly. Everything on this page is built on it.">i</span></th>
+            <th data-k="par" data-t="n" class="sorted">vs Par<span class="ic" title="Shark /100 minus the median Shark /100 of all qualified players at the same handicap. Positive = out-performing your grade.">i</span></th>
+            <th data-k="gap" data-t="n">Band gap<span class="ic" title="Points outside your handicap's Shark /100 band. 0.0 = inside the band, i.e. playing to grade.">i</span></th>
+          </tr></thead><tbody></tbody>
+        </table></div></div>
+        <p class="foot">Wednesday 8-ball only, covering every player who clears the rack minimum in the selected window &mdash; newcomers included, since the least-tested handicaps are the ones most worth checking. A <span class="thin">*</span> on <b>vs Par</b> flags a handicap with fewer than five players in the window, where the median is thin enough to swing. <b>Par</b> is recomputed from the board inside the selected window, so it tracks the league rather than a frozen constant. A high <b>vs Par</b> at a low handicap is the classic under-rated player; a deeply negative one usually means the handicap was set from form the player has since lost. <b>One caveat on the rack windows:</b> the underlying data records a Shark total per season, not per rack, so a window that ends mid-season splits that season proportionally rather than picking out the literal last 25 games. For anyone whose current season already exceeds the window, <b>Last 25 and Last 50 therefore read the same as this season</b> &mdash; the windows only diverge once they reach back into earlier seasons.</p>
+      </section>
+    </div></div>
+
     <!-- PLAYER VIEW -->
     <div class="view" id="view-player" hidden><div class="wrap">
       <header>
@@ -428,17 +516,180 @@ function tierColor(v){return 'var(--tier'+playsLike(v)+')';}
 /* ---------- NAV ---------- */
 (function(){
   const nav=document.getElementById('nav');
-  let html=`<li><a class="league active" data-view="league">League Overview</a></li><li><a class="team" data-view="team">Team Overview</a></li><li><a data-view="metrics">Metrics Guide</a></li><li class="navlabel">Player Reports</li>`;
+  let html=`<li><a class="league active" data-view="league">League Overview</a></li><li><a class="team" data-view="team">Team Overview</a></li><li><a data-view="shark">Shark vs HC</a></li><li><a data-view="metrics">Metrics Guide</a></li><li class="navlabel">Player Reports</li>`;
   ORDER.forEach(nm=>{const p=PLAYERS[nm];html+=`<li><a data-view="player" data-name="${nm}">${nm}<span class="meta">HC${p.hc} · #${p.rank}</span></a></li>`;});
   nav.innerHTML=html;
   nav.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();
     document.querySelectorAll('#nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');
     const v=a.dataset.view;
-    if(v==='league'){show('league');}else if(v==='team'){show('team');renderTeam();}else if(v==='metrics'){show('metrics');}else{show('player');loadPlayer(a.dataset.name);}
+    if(v==='league'){show('league');}else if(v==='team'){show('team');renderTeam();}else if(v==='shark'){show('shark');renderAC();}else if(v==='metrics'){show('metrics');}else{show('player');loadPlayer(a.dataset.name);}
     window.scrollTo(0,0);});
 })();
-function show(v){['league','team','metrics','player'].forEach(x=>document.getElementById('view-'+x).hidden=(v!==x));}
+function show(v){['league','team','shark','metrics','player'].forEach(x=>document.getElementById('view-'+x).hidden=(v!==x));}
 function goPlayer(nm){document.querySelectorAll('#nav a').forEach(x=>x.classList.toggle('active',x.dataset.name===nm));show('player');loadPlayer(nm);window.scrollTo(0,0);}
+
+/* ---------- SHARK VS HC ----------
+   Set AC_PROTO to an array of names to restrict the board (used while prototyping); null = everyone. */
+const AC_PROTO=null;
+let acSort='par',acAsc=false,acInit=false,acScope='season';
+const AC_P2T=OV.P2T||{};   // player -> current-season team, same source the League board uses
+const AC_SEQ=OV.ORDER.filter(k=>k!=='All');   // newest -> oldest; survives season rollover
+const AC_CUR=AC_SEQ[0];
+// Minimum racks to appear, per scope. Shark over a handful of racks is noise, and this page
+// exists to judge a player's grade — so thin samples are excluded rather than ranked.
+const AC_MIN={season:10,w25:25,w50:50,career:50};
+const AC_SCOPES={
+  season:{label:(OV.LABELS&&OV.LABELS[AC_CUR])||AC_CUR, short:'this season'},
+  w25:{label:'Last 25 racks', short:'last 25 racks'},
+  w50:{label:'Last 50 racks', short:'last 50 racks'},
+  career:{label:'Career (last 6 seasons)', short:'career'}
+};
+// name -> [{k,F,sh}] newest-first, seasons actually played. Built once from the per-season
+// boards, which sum exactly to the career row.
+let acIdx=null;
+function acIndex(){
+  if(acIdx)return acIdx;
+  acIdx={};
+  AC_SEQ.forEach(k=>{(OV.ROWS[k]||[]).forEach(r=>{if(r[8]>0)(acIdx[r[0]]=acIdx[r[0]]||[]).push({k,F:r[8],sh:r[5],W:r[6],L:r[7]});});});
+  return acIdx;
+}
+// Walk seasons newest-first until N racks are collected, pro-rating the season that straddles
+// the boundary. Season totals are the finest grain the data carries — there is no per-rack date —
+// so a window landing mid-season splits that season proportionally.
+function acWindow(nm,N){
+  let racks=0,shark=0,W=0,L=0;const spans=[];
+  for(const s of (acIndex()[nm]||[])){
+    const need=N-racks; if(need<=1e-9)break;
+    const take=Math.min(s.F,need), f=take/s.F;   // f<1 only for the season straddling the edge
+    racks+=take; shark+=s.sh*f; W+=s.W*f; L+=s.L*f; spans.push(s.k);
+    if(take<s.F)break;
+  }
+  return {racks,shark,W,L,spans};
+}
+// {racks,shark,spans} for one player under the active scope, or null if they don't clear it.
+function acScoped(nm){
+  if(acScope==='w25')return acWindow(nm,25);
+  if(acScope==='w50')return acWindow(nm,50);
+  const key=acScope==='career'?'All':AC_CUR;
+  const r=(OV.ROWS[key]||[]).find(x=>x[0]===nm);
+  if(!r||!r[8])return null;
+  return {racks:r[8],shark:r[5],W:r[6],L:r[7],spans:acScope==='career'?['All']:[AC_CUR]};
+}
+// Everyone who appears on any board — not just the career-qualified 180. Newer players carry
+// the least-tested handicaps, so they are exactly who this page should be able to catch.
+// The career row wins where it exists (it carries the settled handicap), seasons fill in the rest.
+let acUni=null;
+function acUniverse(){
+  if(acUni)return acUni;
+  const m={};
+  ['All',...AC_SEQ].forEach(k=>{(OV.ROWS[k]||[]).forEach(r=>{if(!m[r[0]])m[r[0]]={name:r[0],hc:r[1],chalk:r[9]};});});
+  acUni=Object.values(m);
+  return acUni;
+}
+// Par = median Shark/100 per handicap, recomputed inside the active scope so the comparison
+// is always like-for-like rather than measured against a career yardstick.
+function acPar(){
+  const by={};
+  acUniverse().forEach(p=>{
+    const w=acScoped(p.name);
+    if(!w||w.racks<AC_MIN[acScope])return;
+    (by[p.hc]=by[p.hc]||[]).push(w.shark/w.racks*100);
+  });
+  const med={},n={};
+  for(const h in by){const v=by[h].sort((a,b)=>a-b),c=v.length;med[h]=c%2?v[(c-1)/2]:(v[c/2-1]+v[c/2])/2;n[h]=c;}
+  return {med,n};
+}
+function acData(){
+  const {med,n}=acPar(), only=AC_PROTO?new Set(AC_PROTO):null;
+  const out=[];let short=0;
+  acUniverse().forEach(p=>{
+    const nm=p.name; if(only&&!only.has(nm))return;
+    const w=acScoped(nm);
+    if(!w||w.racks<AC_MIN[acScope]){short++;return;}
+    const hc=p.hc,rate=w.shark/w.racks*100,b=BANDS.find(x=>x.hc===hc)||null;
+    // Band gap: 0 while inside your handicap's band, otherwise the signed distance to the edge you cleared.
+    const gap=b?(rate>=b.hi?rate-b.hi:(rate<b.lo?rate-b.lo:0)):null;
+    const pl=playsLike(rate);
+    // W is rounded for display and L derived from it, so a pro-rated window's record always
+    // foots to its rack count. Win% is taken from those same displayed figures rather than the
+    // raw fractions, so the row reads consistently (23–2 shows as 92%, not 90%). Whole-season
+    // and career scopes carry integer records, where the two definitions coincide exactly.
+    const dW=Math.round(w.W), dL=Math.max(0,Math.round(w.racks)-dW);
+    out.push({name:nm,team:AC_P2T[nm]||'',hc,F:w.racks,W:dW,L:dL,pct:w.racks?dW/Math.round(w.racks):null,shark:w.shark,rate,pl,d:pl-hc,
+              par:med[hc]!=null?rate-med[hc]:null,cohort:n[hc]||0,gap,chalk:p.chalk,
+              span:w.spans.map(k=>k==='All'?'6 seasons':k).join(' → ')});
+  });
+  out.short=short;
+  return out;
+}
+// Renders one board. slim=true drops Shark total and Band gap for the two highlight tables,
+// which exist to be scanned rather than interrogated.
+function acFill(tb,rows,slim){
+  if(!tb)return;
+  const cls=v=>v==null?'':(v>0.05?'pos':(v<-0.05?'neg':''));
+  const fmt=(v,d)=>v==null?'&mdash;':sg(v,d);
+  const thin=r=>r.cohort&&r.cohort<5;
+  tb.innerHTML=rows.map((r,i)=>`<tr class="${r.chalk?'chalk':''}" data-name="${r.name}" style="cursor:${r.chalk?'pointer':'default'}">
+    <td class="rank">${i+1}</td>
+    <td style="text-align:left">${r.name}</td>
+    <td class="tm">${r.team||'—'}</td>
+    <td><span class="hcpill">${r.hc}</span></td>
+    <td><span class="plpill" style="background:color-mix(in srgb,${tierColor(r.rate)} 30%,transparent)">${r.pl}</span></td>
+    ${slim?'':`<td class="${cls(r.d)}">${r.d>0?'+':''}${r.d}</td>`}
+    <td>${r.F%1?r.F.toFixed(0):r.F}</td>
+    ${slim?'':`<td class="tm">${r.span}</td>`}
+    <td>${r.W}</td>
+    <td>${r.L}</td>
+    <td>${r.pct==null?'&mdash;':(r.pct*100).toFixed(1)}</td>
+    ${slim?'':`<td>${sg(r.shark,1)}</td>`}
+    <td>${sg(r.rate,1)}</td>
+    ${slim?'':`<td class="${cls(r.par)}"${thin(r)?` title="Only ${r.cohort} player${r.cohort===1?'':'s'} at HC ${r.hc} in this window — par is a median of very few results and will swing."`:''}>${fmt(r.par,1)}${thin(r)?'<span class="thin">*</span>':''}</td>`}
+    <td class="${cls(r.gap)}">${r.gap==null?'&mdash;':(r.gap===0?'0.0':sg(r.gap,1))}</td>
+  </tr>`).join('');
+  tb.querySelectorAll('tr[data-name]').forEach(tr=>{
+    if(PLAYERS[tr.dataset.name])tr.addEventListener('click',()=>goPlayer(tr.dataset.name));
+  });
+}
+function renderAC(){
+  const tb=document.querySelector('#acTbl tbody');if(!tb)return;
+  const rows=acData();
+  const note=document.getElementById('acProtoNote');
+  if(note){
+    const tot=AC_PROTO?AC_PROTO.length:acUniverse().length;
+    const miss=rows.short?` · ${rows.short} below the ${AC_MIN[acScope]}-rack minimum for this scope`:'';
+    note.textContent=(AC_PROTO?'Prototype · ':'')+`${rows.length} of ${tot} players · ${AC_SCOPES[acScope].short}${miss}`;
+  }
+  const dir=acAsc?1:-1;
+  rows.sort((a,b)=>{
+    const x=a[acSort],y=b[acSort];
+    if(x==null&&y==null)return 0; if(x==null)return 1; if(y==null)return -1;
+    if(typeof x==='string')return dir*x.localeCompare(y);
+    return dir*(x-y);
+  });
+  acFill(tb,rows,false);
+  // Both highlight boards are ends of the same Band-gap ordering — distance past your handicap's
+  // band, i.e. how far into the neighbouring grade your results actually land. vs Par breaks ties.
+  // Players with no band (HC outside 2-8) are left out; the half-length cap stops the two tables
+  // overlapping if a narrow window ever leaves fewer than 20 players on the board.
+  const ranked=rows.filter(r=>r.gap!=null).sort((a,b)=>(b.gap-a.gap)||((b.par??0)-(a.par??0)));
+  const cap=Math.min(10,Math.max(1,Math.floor(ranked.length/2)));
+  acFill(document.querySelector('#acOverTbl tbody'),ranked.slice(0,cap),true);
+  acFill(document.querySelector('#acUnderTbl tbody'),ranked.slice(-cap).reverse(),true);
+  document.querySelectorAll('#acTbl th').forEach(th=>th.classList.toggle('sorted',th.dataset.k===acSort));
+  if(!acInit){
+    acInit=true;
+    document.querySelectorAll('#acTbl th').forEach(th=>th.addEventListener('click',()=>{
+      const k=th.dataset.k;if(!k||k==='rk'||k==='span')return;
+      if(k===acSort)acAsc=!acAsc;else{acSort=k;acAsc=(k==='name');}
+      renderAC();
+    }));
+    const sel=document.getElementById('acScope');
+    if(sel){
+      sel.innerHTML=Object.keys(AC_SCOPES).map(k=>`<option value="${k}"${k===acScope?' selected':''}>${AC_SCOPES[k].label}</option>`).join('');
+      sel.addEventListener('change',e=>{acScope=e.target.value;renderAC();});
+    }
+  }
+}
 (function(){var b=document.getElementById('mburger');if(!b)return;function set(o){document.body.classList.toggle('navopen',o);b.setAttribute('aria-expanded',o);b.textContent=o?'\u2715':'\u2630';}b.addEventListener('click',function(){set(!document.body.classList.contains('navopen'));});var nv=document.getElementById('nav');if(nv)nv.addEventListener('click',function(e){if(e.target.closest('a'))set(false);});})();
 
 /* ================= LEAGUE VIEW ================= */
